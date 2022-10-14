@@ -1,0 +1,27 @@
+server:
+  port: 8082
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/stonks
+    username: postgres
+    password: postgre$$$
+  jpa:
+    generate-ddl: 'false'
+    database: POSTGRESQL
+    properties:
+      hibernate:
+        jdbc:
+          lob:
+            non_contextual_creation: 'true'
+    show-sql: 'false'
+    hibernate:
+      ddl-auto: none
+  devtools:
+    restart:
+      enabled: true
+
+logging:
+  level:
+    com.rno: INFO
+    org.springframework: INFO
