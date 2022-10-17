@@ -1,4 +1,4 @@
-package com.rno.yuzuohlcvsaver;
+package com.rndbblnn.stonks.yuzuohlcvsaver;
 
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;

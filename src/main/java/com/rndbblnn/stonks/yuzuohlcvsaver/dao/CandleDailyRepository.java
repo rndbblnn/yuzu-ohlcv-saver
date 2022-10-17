@@ -1,9 +1,8 @@
-package com.rno.yuzuohlcvsaver.dao;
+package com.rndbblnn.stonks.yuzuohlcvsaver.dao;
 
-import com.rno.yuzuohlcvsaver.dao.entity.CandleDailyEntity;
-import org.springframework.data.repository.CrudRepository;
-
+import com.rndbblnn.stonks.commons.entity.CandleDailyEntity;
 import java.time.LocalDateTime;
+import org.springframework.data.repository.CrudRepository;
 
 public interface CandleDailyRepository extends CrudRepository<CandleDailyEntity, Long> {
 

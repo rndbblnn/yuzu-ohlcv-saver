@@ -1,5 +1,8 @@
-package com.rno.yuzuohlcvsaver;
+package com.rndbblnn.stonks.yuzuohlcvsaver;
 
+import java.lang.reflect.Method;
+import java.util.concurrent.Executor;
+import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler;
@@ -12,10 +15,6 @@ import org.springframework.scheduling.annotation.AsyncConfigurer;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
-
-import javax.sql.DataSource;
-import java.lang.reflect.Method;
-import java.util.concurrent.Executor;
 
 @Configuration
 @EnableAsync
