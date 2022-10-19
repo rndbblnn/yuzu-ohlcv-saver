@@ -1,6 +1,10 @@
 server:
   port: 8082
 
+api:
+  yuzu:
+    api-key: someapikey
+
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/stonks
@@ -10,11 +14,11 @@ spring:
     generate-ddl: 'false'
     database: POSTGRESQL
     properties:
-      hibernate:
-        jdbc:
-          lob:
-            non_contextual_creation: 'true'
-    show-sql: 'false'
+#      org.hibernate.flushMode: ALWAYS
+#      hibernate.transaction.flush_before_completion: true
+      hibernate.jdbc.lob.non_contextual_creation: 'true'
+#      show-sql: true
+#      hibernate.format_sql: true
     hibernate:
       ddl-auto: none
   devtools:
@@ -26,3 +30,6 @@ logging:
     root: INFO
     com.rno: INFO
     org.springframework: INFO
+#    org.hibernate.SQL: TRACE
+#    org.springframework.jdbc.core.JdbcTemplate: TRACE
+#    org.springframework.jdbc.core.StatementCreatorUtils: TRACE

@@ -13,4 +13,10 @@ public class SymbolSaverTest extends BaseIntegrationTest{
     symbolSaver.saveAllFromFile();
   }
 
+  @Test
+  public void saveCandles1m() {
+    symbolSaver.saveCandles1m();
+  }
+
+
 }

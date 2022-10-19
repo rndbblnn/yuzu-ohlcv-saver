@@ -13,3 +13,5 @@ target/
 output/
 build/
 .gradle/
+
+application-local.yml

@@ -1,13 +1,13 @@
 
 package com.rndbblnn.stonks.yuzuohlcvsaver.graphql.response;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import lombok.Data;
 
 @Data
 public class Aggregate {
 
-    private LocalDateTime time;
+    private ZonedDateTime time;
     private Double open;
     private Double high;
     private Double low;

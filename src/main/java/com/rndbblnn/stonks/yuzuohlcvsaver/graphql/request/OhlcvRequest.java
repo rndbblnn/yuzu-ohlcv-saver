@@ -1,7 +1,7 @@
 package com.rndbblnn.stonks.yuzuohlcvsaver.graphql.request;
 
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -12,10 +12,12 @@ import org.springframework.util.CollectionUtils;
 @Data
 public class OhlcvRequest implements GraphQLRequest {
 
+  private static final DateTimeFormatter YUZU_UTC_DATETIMEFORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'.000Z'");
+
   private int limit = 500;
   private Period period = Period.DAY;
-  private LocalDateTime after;
-  private LocalDateTime before;
+  private ZonedDateTime after;
+  private ZonedDateTime before;
   private List<String> symbols;
 
   public enum Period {
@@ -67,8 +69,14 @@ public class OhlcvRequest implements GraphQLRequest {
     );
   }
 
-  private static final String toDateStr(LocalDateTime localDateTime) {
-    return localDateTime.truncatedTo(ChronoUnit.DAYS)
-        + ":00.000Z";
+  private static final String toDateStr(ZonedDateTime localDateTime) {
+
+    String s = localDateTime.withSecond(0)
+        .withNano(0)
+        .format(YUZU_UTC_DATETIMEFORMATTER);
+
+//    System.out.println(localDateTime + " -> " + s);
+
+    return s;
   }
 }
