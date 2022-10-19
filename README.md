@@ -1,3 +1,8 @@
-# yuzu-ohlcv-saver (work in progress)
+# yuzu-ohlcv-saver
 
-simple app to fetch & save OHLCV data from yuzu.dev's GraphQL server
+simple app to fetch OHLCV data from yuzu.dev's GraphQL server and save into a local PostgreSQL database
+
+## Usage
+
+* Put yuzu.dev API key in application.yml
+* Run SymbolSaverTest
