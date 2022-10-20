@@ -34,10 +34,10 @@ public class YuzoOhlcvSaverConfig implements AsyncConfigurer, WebMvcConfigurer {
     @Bean
     public Executor taskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(20);
-        executor.setMaxPoolSize(50);
-        executor.setQueueCapacity(500);
-        executor.setThreadNamePrefix("YuzoOhlcvSaverPool-");
+        executor.setCorePoolSize(2);
+        executor.setMaxPoolSize(2);
+        executor.setQueueCapacity(50);
+        executor.setThreadNamePrefix("YuzuOhlcvSaverPool-");
         executor.initialize();
         return executor;
     }

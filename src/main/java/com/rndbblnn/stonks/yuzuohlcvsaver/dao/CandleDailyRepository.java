@@ -11,4 +11,8 @@ public interface CandleDailyRepository extends PagingAndSortingRepository<Candle
   boolean existsTickEntityByTickTimeAndSymbol(LocalDateTime tickTime, String symbol);
 
   Page<CandleDailyEntity> findAllByTickTimeAfter(LocalDateTime tickTime, Pageable query);
+
+  Page<CandleDailyEntity> findAllBySymbolAndTickTimeAfter(String symbol, LocalDateTime tickTime, Pageable query);
+
+  Page<CandleDailyEntity> findAllBySymbol(String symbol, Pageable pageable);
 }

@@ -5,13 +5,12 @@ import io.aexp.nodes.graphql.GraphQLRequestEntity;
 import io.aexp.nodes.graphql.GraphQLResponseEntity;
 import io.aexp.nodes.graphql.GraphQLTemplate;
 import io.aexp.nodes.graphql.Variable;
+import io.aexp.nodes.graphql.exceptions.GraphQLException;
 import java.math.BigDecimal;
 import java.util.HashMap;
-import java.util.concurrent.CompletableFuture;
 import lombok.SneakyThrows;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -22,16 +21,8 @@ public class YuzuClient {
   private String yuzuApiKey;
 
   @SneakyThrows
-  @Async
-  public <T> CompletableFuture<? extends T> query(GraphQLRequest request, Class<T> responseClass) {
-
-//    System.out.println("after: " + ((OhlcvRequest) request).getAfter() + ", before: " +
-//        ((OhlcvRequest) request).getBefore());
-
-    return
-        CompletableFuture.completedFuture(
-            this.doQuery(request, responseClass).getResponse()
-        );
+  public <T> T query(GraphQLRequest request, Class<T> responseClass) {
+    return this.doQuery(request, responseClass).getResponse();
 
   }
 
@@ -60,6 +51,10 @@ public class YuzuClient {
                     .build(),
                 responseClass
             );
+
+      } catch (GraphQLException e) {
+        System.err.println("Try #" + i);
+        e.printStackTrace();
       } catch (Exception e) {
         System.err.println("Try #" + i);
         e.printStackTrace();
