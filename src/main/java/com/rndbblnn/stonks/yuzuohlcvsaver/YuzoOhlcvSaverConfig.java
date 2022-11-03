@@ -13,12 +13,14 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.scheduling.annotation.AsyncConfigurer;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 @EnableAsync
 @EnableCaching
+@EnableScheduling
 public class YuzoOhlcvSaverConfig implements AsyncConfigurer, WebMvcConfigurer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(YuzoOhlcvSaverConfig.class);

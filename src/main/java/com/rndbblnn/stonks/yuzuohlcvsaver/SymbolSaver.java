@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import com.google.common.io.Files;
 import com.rndbblnn.stonks.commons.entity.Candle1mEntity;
 import com.rndbblnn.stonks.commons.entity.CandleDailyEntity;
+import com.rndbblnn.stonks.commons.utils.DateUtils;
 import com.rndbblnn.stonks.yuzuohlcvsaver.dao.Candle1mRepository;
 import com.rndbblnn.stonks.yuzuohlcvsaver.dao.CandleDailyRepository;
 import com.rndbblnn.stonks.yuzuohlcvsaver.graphql.request.OhlcvRequest;
@@ -17,7 +18,9 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -45,6 +48,33 @@ public class SymbolSaver {
 
   private static Executor taskExecutor = Executors.newFixedThreadPool(5);
 
+  public void saveAllLatestCandles() {
+    LocalDateTime currentDate = LocalDateTime.now();
+    LocalDateTime latestTickTimeFromDb = candleDailyRepository.findLatestTickTime();
+
+    do {
+      latestTickTimeFromDb = latestTickTimeFromDb.minusDays(1);
+    } while (!DateUtils.isMarketDay(latestTickTimeFromDb.toLocalDate()));
+
+    // daily
+    List<String> latestSymbols = candleDailyRepository.findAllSymbolsByTickTime(latestTickTimeFromDb);
+
+    while (currentDate.isAfter(latestTickTimeFromDb)) {
+      final LocalDateTime currentDatef = currentDate;
+      Lists.partition(latestSymbols, 450)
+          .stream()
+          .forEach(symbolList -> {
+            this.saveDailyCandles(symbolList,
+                currentDatef.atZone(ZoneId.of("UTC")),
+                currentDatef.plusDays(1).atZone(ZoneId.of("UTC")));
+          });
+      currentDate = currentDate.minusDays(1);
+    }
+
+    // intra
+    this.saveAllIntradayCandles(latestSymbols, currentDate.minusDays(1));
+  }
+
   @SneakyThrows
   public void saveAllDailyCandlesFromFile(File file) {
 
@@ -67,8 +97,8 @@ public class SymbolSaver {
                 .withSecond(59)
                 .withNano(999);
 
-            CompletableFuture<Data> supplyAsync = CompletableFuture.supplyAsync(() ->
-                    this.saveDailyCandles(symbol, dateFrom, dateTo),
+            CompletableFuture.supplyAsync(() ->
+                    this.saveDailyCandles(Lists.newArrayList(symbol), dateFrom, dateTo),
                 taskExecutor
             );
           }
@@ -76,15 +106,18 @@ public class SymbolSaver {
   }
 
   @SneakyThrows
-  public Data saveDailyCandles(String symbol, ZonedDateTime dateFrom, ZonedDateTime dateTo) {
+  public Data saveDailyCandles(List<String> symbolList, ZonedDateTime dateFrom, ZonedDateTime dateTo) {
 
-    log.info("querying... [symbol:{}, from:{}, to:{}]", symbol, dateFrom, dateTo);
+    dateFrom = DateUtils.trimHoursAndMinutes(dateFrom);
+    dateTo = DateUtils.trimHoursAndMinutes(dateTo);
+
+    log.info("querying... [count:{}, from:{}, to:{}]", symbolList.size(), dateFrom, dateTo);
 
     Data d;
     try {
-      d =yuzuClient.query(
+      d = yuzuClient.query(
           new OhlcvRequest()
-              .setSymbols(Lists.newArrayList(symbol))
+              .setSymbols(symbolList)
               .setPeriod(Period.DAY)
               .setAfter(dateFrom)
               .setBefore(dateTo),
@@ -105,29 +138,28 @@ public class SymbolSaver {
       return null;
     }
 
-    Security security = d.getSecurities().get(0);
-    if (d.getSecurities().size() > 1) {
-      throw new RuntimeException("size > 1");
-    }
-
-    security.getAggregates()
-        .stream()
-        .filter(agg -> !candleDailyRepository.existsTickEntityByTickTimeAndSymbol(agg.getTime().toLocalDateTime(), symbol))
-        .forEach(agg -> {
-          candleDailyRepository.save(
-              (CandleDailyEntity) new CandleDailyEntity()
-                  .setSymbol(security.getSymbol())
-                  .setOpen(agg.getOpen())
-                  .setHigh(agg.getHigh())
-                  .setLow(agg.getLow())
-                  .setClose(agg.getClose())
-                  .setVolume(agg.getVolume().longValue())
-                  .setTickTime(agg.getTime().toLocalDateTime())
-                  .setCreated(LocalDateTime.now())
-          );
+    d.getSecurities().stream()
+        .forEach(security -> {
+          security.getAggregates()
+              .stream()
+              .filter(agg -> !candleDailyRepository.existsTickEntityByTickTimeAndSymbol(agg.getTime().toLocalDateTime(),
+                  security.getSymbol()))
+              .forEach(agg -> {
+                candleDailyRepository.save(
+                    (CandleDailyEntity) new CandleDailyEntity()
+                        .setSymbol(security.getSymbol())
+                        .setOpen(agg.getOpen())
+                        .setHigh(agg.getHigh())
+                        .setLow(agg.getLow())
+                        .setClose(agg.getClose())
+                        .setVolume(agg.getVolume().longValue())
+                        .setTickTime(agg.getTime().toLocalDateTime())
+                        .setCreated(LocalDateTime.now())
+                );
+              });
         });
 
-    log.info("\tDONE [symbol:{}, from:{}, to:{}]", symbol, dateFrom, dateTo);
+    log.info("DONE [count:{}, from:{}, to:{}]", symbolList.size(), dateFrom, dateTo);
 
     return d;
   }
@@ -161,18 +193,25 @@ public class SymbolSaver {
   @SneakyThrows
   public void saveAllIntradayCandlesFromFile(File file) {
 
-    LocalDateTime fromDate = LocalDateTime.now()
+    this.saveAllIntradayCandles(
+        Files.readLines(file, Charset.defaultCharset()),
+        LocalDateTime.now()
 //        .minusYears(1)
-        .withMonth(5)
-        .withDayOfMonth(2)
-        .withHour(0)
-        .withMinute(0)
-        .withSecond(0);
+            .withMonth(5)
+            .withDayOfMonth(2)
+            .withHour(0)
+            .withMinute(0)
+            .withSecond(0)
+    );
 
-    List<String> allSymbols = Files.readLines(file, Charset.defaultCharset());
+  }
 
-    int i =0;
-    for (String symbol : allSymbols) {
+
+  @SneakyThrows
+  public void saveAllIntradayCandles(List<String> symbolList, LocalDateTime fromDate) {
+
+    int i = 0;
+    for (String symbol : symbolList) {
 
       log.info("Processing {} ({})", symbol, i++);
 
@@ -183,15 +222,12 @@ public class SymbolSaver {
               .and(Sort.by("tickTime").ascending())
       );
 
-
       Page<CandleDailyEntity> page;
       do {
         page = candleDailyRepository.findAllBySymbolAndTickTimeAfter(symbol, fromDate, pageable);
         this.savePage(page);
       } while ((pageable = page.nextPageable()) != Pageable.unpaged());
     }
-
-    System.out.println("done?");
 
     CompletableFuture.runAsync(() -> {
               try {
@@ -202,18 +238,17 @@ public class SymbolSaver {
             }
         )
         .join();
-
-    System.out.println("done 4 real");
-
   }
 
   @SneakyThrows
   private void savePage(Page<CandleDailyEntity> page) {
     page.stream()
         .forEach(candleDailyEntity -> {
-              CompletableFuture.supplyAsync(() -> {
-                      return this.saveIntradayCandles(candleDailyEntity.getSymbol(), candleDailyEntity.getTickTime().atZone(ZoneOffset.UTC));
-                  },
+              CompletableFuture.supplyAsync(() ->
+                      this.saveIntradayCandles(
+                          candleDailyEntity.getSymbol(),
+                          candleDailyEntity.getTickTime().atZone(ZoneOffset.UTC)
+                      ),
                   taskExecutor
               );
             }

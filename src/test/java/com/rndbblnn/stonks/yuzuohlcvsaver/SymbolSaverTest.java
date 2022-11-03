@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.ResourceUtils;
 
-public class SymbolSaverTest extends BaseIntegrationTest{
+public class SymbolSaverTest extends BaseIntegrationTest {
 
   private static final String SYMBOL_FILENAME = "symbols.txt";
 
@@ -18,6 +18,12 @@ public class SymbolSaverTest extends BaseIntegrationTest{
     symbolSaver.saveAllDailyCandlesFromFile(
         ResourceUtils.getFile("classpath:" + SYMBOL_FILENAME)
     );
+  }
+
+  @Test
+  @SneakyThrows
+  public void saveAllLatestCandles() {
+    symbolSaver.saveAllLatestCandles();
   }
 
   @Test
