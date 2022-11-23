@@ -1,5 +1,5 @@
 jdk:
-  - openjdk19
+  - openjdk11
 install:
   - echo "Running a custom install command"
   - ./gradlew clean install -xtest
