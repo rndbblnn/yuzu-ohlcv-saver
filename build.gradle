@@ -83,6 +83,7 @@ dependencies {
 
 	testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.4.2")
 }
+compileJava.dependsOn(processResources)
 
 apply plugin: 'idea'
 
@@ -95,6 +96,33 @@ idea {
 
 test {
 	useJUnitPlatform()
+}
+
+publishing {
+	publications {
+		sonatype(MavenPublication) {
+			from components.java
+
+			pom {
+				name = 'Yuzu OHLCV saver'
+				description = 'Yuzu OHLCV saver'
+				url = 'https://github.com/rndbblnn/yuzu-ohlcv-saver'
+				inceptionYear = '2022'
+				licenses {
+					license {
+						name = "The Apache License, Version 2.0"
+						url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
+					}
+				}
+				developers {
+					developer {
+						id = "rndbblnn"
+						name = "Arnaud Boulianne"
+					}
+				}
+			}
+		}
+	}
 }
 
 wrapper {

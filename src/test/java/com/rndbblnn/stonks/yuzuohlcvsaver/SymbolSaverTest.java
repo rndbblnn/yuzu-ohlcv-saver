@@ -1,5 +1,6 @@
 package com.rndbblnn.stonks.yuzuohlcvsaver;
 
+import com.rndbblnn.stonks.yuzuohlcvsaver.todelete.SecurityTypeEnum;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,6 +9,7 @@ import org.springframework.util.ResourceUtils;
 public class SymbolSaverTest extends BaseIntegrationTest {
 
   private static final String SYMBOL_FILENAME = "symbols.txt";
+  private static final String BINANCE_USDT_PAIRS_FILENAME = "binance-usdt-pairs.txt";
 
   @Autowired
   private SymbolSaver symbolSaver;
@@ -16,7 +18,8 @@ public class SymbolSaverTest extends BaseIntegrationTest {
   @SneakyThrows
   public void saveAllDailyCandlesFromFile() {
     symbolSaver.saveAllDailyCandlesFromFile(
-        ResourceUtils.getFile("classpath:" + SYMBOL_FILENAME)
+        ResourceUtils.getFile("classpath:" + SYMBOL_FILENAME),
+        SecurityTypeEnum.US_STOCK
     );
   }
 
