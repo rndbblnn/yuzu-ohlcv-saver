@@ -14,7 +14,7 @@ allprojects {
 		maven { url 'https://jitpack.io' }
 	}
 	apply plugin: 'groovy'
-	sourceCompatibility = 1.8
+	sourceCompatibility = 11
 }
 
 dependencies {
@@ -63,7 +63,7 @@ dependencies {
 	testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
 
 	testImplementation "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
-	testImplementation 'io.projectreactor:reactor-test'
+//	testImplementation 'io.projectreactor:reactor-test'
 	testImplementation 'junit:junit:4.13.2'
 	testImplementation("org.junit.jupiter:junit-jupiter-api:5.4.2")
 	testImplementation 'org.mockito:mockito-core:4.2.0'

@@ -19,6 +19,6 @@
         <module name="yuzu-ohlcv-saver.main" />
       </profile>
     </annotationProcessing>
-    <bytecodeTargetLevel target="1.8" />
+    <bytecodeTargetLevel target="11" />
   </component>
 </project>
