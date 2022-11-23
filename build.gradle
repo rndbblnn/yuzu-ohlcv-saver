@@ -12,7 +12,7 @@ idea {
 	}
 }
 
-group = 'com.rno'
+group = 'com.rndbblnn'
 version = '0.0.1-SNAPSHOT'
 sourceCompatibility = '11'
 
@@ -24,6 +24,7 @@ configurations {
 configurations.all {
 	resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
 }
+
 allprojects {
 	repositories {
 		maven { url 'https://jitpack.io' }
@@ -36,12 +37,18 @@ repositories {
 }
 
 dependencies {
+
+	def springBootVersion = "2.7.4"
+	def lombokVersion = "1.18.24"
+	annotationProcessor "org.springframework.boot:spring-boot-autoconfigure-processor:$springBootVersion"
+	annotationProcessor "org.springframework.boot:spring-boot-configuration-processor:$springBootVersion"
+
 	implementation 'com.github.rndbblnn:stonks-commons-starter:main-SNAPSHOT'
 
 	// spring stuff
-	implementation 'org.springframework.boot:spring-boot-starter-jdbc'
-	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-	implementation 'org.springframework.boot:spring-boot-starter-cache'
+	implementation "org.springframework.boot:spring-boot-starter-jdbc:$springBootVersion"
+	implementation "org.springframework.boot:spring-boot-starter-data-jpa:$springBootVersion"
+	implementation "org.springframework.boot:spring-boot-starter-cache:$springBootVersion"
 	implementation 'org.springframework:springloaded:1.2.8.RELEASE'
 
 	// GraphQL
@@ -50,11 +57,10 @@ dependencies {
 	// DB
 	runtimeOnly 'org.postgresql:postgresql'
 
-	implementation 'org.springframework.boot:spring-boot-starter-web'
-	implementation 'org.springframework.boot:spring-boot-starter-webflux'
+	implementation "org.springframework.boot:spring-boot-starter-web:$springBootVersion"
+	implementation "org.springframework.boot:spring-boot-starter-webflux:$springBootVersion"
 
-	developmentOnly 'org.springframework.boot:spring-boot-devtools'
-	annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+	developmentOnly "org.springframework.boot:spring-boot-devtools:$springBootVersion"
 
 	// utils
 	implementation 'ch.qos.logback:logback-classic:1.2.9'
@@ -69,14 +75,14 @@ dependencies {
 
 	implementation "com.graphql-java-generator:graphql-java-client-runtime:1.18.6"
 
-	compileOnly 'org.projectlombok:lombok:1.18.22'
-	annotationProcessor 'org.projectlombok:lombok:1.18.22'
-	testCompileOnly 'org.projectlombok:lombok:1.18.22'
-	testAnnotationProcessor 'org.projectlombok:lombok:1.18.22'
+	implementation "org.projectlombok:lombok:$lombokVersion"
+	compileOnly "org.projectlombok:lombok:$lombokVersion"
+	annotationProcessor "org.projectlombok:lombok:$lombokVersion"
+	testCompileOnly "org.projectlombok:lombok:$lombokVersion"
+	testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
 
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
 	testImplementation 'io.projectreactor:reactor-test'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'junit:junit:4.13.2'
 	testImplementation("org.junit.jupiter:junit-jupiter-api:5.4.2")
 	testImplementation 'org.mockito:mockito-core:4.2.0'
@@ -96,6 +102,10 @@ idea {
 
 test {
 	useJUnitPlatform()
+}
+
+java {
+
 }
 
 publishing {
