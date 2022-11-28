@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.PagingAndSortingRepository;
+import org.springframework.data.repository.query.Param;
 
 public interface CandleDailyRepository extends PagingAndSortingRepository<CandleDailyEntity, Long> {
 
@@ -22,7 +23,7 @@ public interface CandleDailyRepository extends PagingAndSortingRepository<Candle
   LocalDateTime findLatestTickTime();
 
   @Query(nativeQuery = true, value = "SELECT symbol FROM candle_d WHERE tick_time = :tickTime")
-  List<String> findAllSymbolsByTickTime(LocalDateTime tickTime);
+  List<String> findAllSymbolsByTickTime(@Param("tickTime") LocalDateTime tickTime);
 
   @Query(nativeQuery = true, value = "SELECT symbol FROM candle_d ORDER by 1 ASC")
   List<String> findAllSymbols();

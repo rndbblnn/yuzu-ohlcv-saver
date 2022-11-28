@@ -3,6 +3,8 @@ package com.rndbblnn.stonks.yuzuohlcvsaver;
 import com.rndbblnn.stonks.yuzuohlcvsaver.graphql.request.OhlcvRequest;
 import com.rndbblnn.stonks.yuzuohlcvsaver.graphql.request.OhlcvRequest.Period;
 import com.rndbblnn.stonks.yuzuohlcvsaver.graphql.response.Data;
+import java.time.ZonedDateTime;
+import org.assertj.core.util.Lists;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -16,7 +18,9 @@ public class YuzuClientTest extends BaseIntegrationTest {
 
     Data d = yuzuClient.query(
         new OhlcvRequest()
-            .setPeriod(Period.DAY)
+            .setSymbols(Lists.newArrayList("AEHR"))
+            .setPeriod(Period.MINUTE)
+//            .setAfter(ZonedDateTime.of(2022,11,16, ))
             .setAfter(null),
         Data.class
     );

@@ -1,6 +1,8 @@
 package com.rndbblnn.stonks.yuzuohlcvsaver;
 
 import com.rndbblnn.stonks.yuzuohlcvsaver.todelete.SecurityTypeEnum;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,6 +42,11 @@ public class SymbolSaverTest extends BaseIntegrationTest {
     symbolSaver.saveAllIntradayCandlesFromFile(
         ResourceUtils.getFile("classpath:" + SYMBOL_FILENAME)
     );
+  }
+
+  @Test
+  public void testsaveIntradayCandles() {
+    symbolSaver.saveIntradayCandles("AMPX", ZonedDateTime.of(2022,11,11,0,0,0,0, ZoneId.systemDefault()));
   }
 
 }

@@ -32,7 +32,7 @@ public class YuzuClient {
 
 //    String  q= request.toQueryStr().replaceAll("\\r|\\n", "");
     String q = request.toQueryStr();
-//    System.err.println(q);
+    System.err.println(q);
 
     for (int i = 0; i < 3; i++) {
       GraphQLResponseEntity<T> response = null;

@@ -33,6 +33,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 @AllArgsConstructor
@@ -265,27 +266,26 @@ public class SymbolSaver {
   }
 
   @SneakyThrows
-  private Data saveIntradayCandles(String symbol, ZonedDateTime zonedDateTime) {
+  @Transactional
+  public Data saveIntradayCandles(String symbol, ZonedDateTime zonedDateTime) {
 
-    ZonedDateTime from = zonedDateTime
-        .withHour(13)
-        .withMinute(30)
-        .withSecond(0);
-    ZonedDateTime to = zonedDateTime
-        .withHour(20)
-        .withMinute(0)
-        .withSecond(0);
+    ZonedDateTime from = DateUtils.trimHoursAndMinutes(
+        zonedDateTime.withZoneSameInstant(ZoneId.of("UTC"))
+            .withZoneSameInstant(ZoneId.of("UTC")));
+    ZonedDateTime to = DateUtils.trimHoursAndMinutes(
+            zonedDateTime.withZoneSameInstant(ZoneId.of("UTC")).plusDays(1))
+        .withZoneSameInstant(ZoneId.of("UTC"));
 
     if (candle1mRepository.existsTickEntityByTickTimeAndSymbol(
-        from.withZoneSameInstant(ZoneId.of("America/New_York")).toLocalDateTime(), symbol)
+        from.withHour(14).withMinute(30).withZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime(), symbol)
         &&
         candle1mRepository.existsTickEntityByTickTimeAndSymbol(
-            to.minusMinutes(1).withZoneSameInstant(ZoneId.of("America/New_York")).toLocalDateTime(), symbol)) {
+            from.withHour(20).withMinute(59).withZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime(), symbol)) {
       log.warn("Skipping {} @ {}", symbol, from);
       return null;
     }
 
-//    log.info("querying... [symbol:{}, from:{}, to:{}]", symbol, zonedDateTime, zonedDateTime);
+    log.info("querying... [symbol:{}, from:{}, to:{}]", symbol, zonedDateTime, zonedDateTime);
 
     Data data = yuzuClient.query(
         new OhlcvRequest()
@@ -312,10 +312,12 @@ public class SymbolSaver {
     List<Candle1mEntity> entityList =
         security.getAggregates()
             .stream()
-            .filter(agg -> !candle1mRepository.existsTickEntityByTickTimeAndSymbol(
-                agg.getTime().withZoneSameInstant(ZoneId.of("America/New_York")).toLocalDateTime(), symbol))
-            .map(agg -> {
 
+            .filter(agg -> agg.getTime().isAfter(from.withHour(14).withMinute(29))
+                && agg.getTime().isBefore(from.withHour(21).withMinute(01)))
+            .filter(agg -> !candle1mRepository.existsTickEntityByTickTimeAndSymbol(
+                agg.getTime().withZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime(), symbol))
+            .map(agg -> {
               LocalDateTime tickTime = agg.getTime().withZoneSameInstant(ZoneId.of("America/New_York")).toLocalDateTime();
               log.info("saving ... [symbol:{}, tickTime:{}]", symbol, tickTime);
 
