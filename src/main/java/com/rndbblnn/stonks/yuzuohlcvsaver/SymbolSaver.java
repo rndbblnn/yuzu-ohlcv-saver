@@ -59,10 +59,13 @@ public class SymbolSaver {
     } while (!DateUtils.isMarketDay(latestTickTimeFromDb.toLocalDate()));
 
     // daily
-    List<String> latestSymbols = candleDailyRepository.findAllSymbolsByTickTime(latestTickTimeFromDb);
+    List<String> latestSymbols = candleDailyRepository.findAllSymbolsByTickTime(latestTickTimeFromDb.minusDays(10));
+
+    log.info("latestTickTimeFromDb: {}, found {} symbols", latestTickTimeFromDb, latestSymbols.size());
 
     while (currentDate.isAfter(latestTickTimeFromDb)) {
       final LocalDateTime currentDatef = currentDate;
+      log.info("\tcurrentDate: {}", currentDatef);
       Lists.partition(latestSymbols, 450)
           .stream()
           .forEach(symbolList -> {

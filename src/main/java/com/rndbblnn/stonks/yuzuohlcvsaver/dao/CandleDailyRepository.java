@@ -25,6 +25,7 @@ public interface CandleDailyRepository extends PagingAndSortingRepository<Candle
   @Query(nativeQuery = true, value = "SELECT symbol FROM candle_d WHERE tick_time = :tickTime")
   List<String> findAllSymbolsByTickTime(@Param("tickTime") LocalDateTime tickTime);
 
-  @Query(nativeQuery = true, value = "SELECT symbol FROM candle_d ORDER by 1 ASC")
+  @Query(nativeQuery = true, value = "SELECT DISTINCT symbol FROM candle_d ORDER by 1 ASC")
   List<String> findAllSymbols();
+
 }
