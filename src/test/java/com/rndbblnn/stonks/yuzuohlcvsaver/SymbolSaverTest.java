@@ -1,7 +1,7 @@
 package com.rndbblnn.stonks.yuzuohlcvsaver;
 
 import com.google.common.collect.Sets;
-import com.rndbblnn.stonks.yuzuohlcvsaver.dao.CandleUtilsRepository;
+import com.rndbblnn.stonks.commons.dao.CandleUtilsRepository;
 import com.rndbblnn.stonks.yuzuohlcvsaver.todelete.SecurityTypeEnum;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -17,9 +17,6 @@ public class SymbolSaverTest extends BaseIntegrationTest {
 
   @Autowired
   private SymbolSaver symbolSaver;
-
-  @Autowired
-  private CandleUtilsRepository candleUtilsRepository;
 
   @Test
   @SneakyThrows
@@ -52,15 +49,6 @@ public class SymbolSaverTest extends BaseIntegrationTest {
   @Test
   public void testsaveIntradayCandles() {
     symbolSaver.saveIntradayCandles("AMPX", ZonedDateTime.of(2022,11,11,0,0,0,0, ZoneId.systemDefault()));
-  }
-
-  @Test
-  public void findMissingDailyCandles() {
-    candleUtilsRepository.findMissingDailyCandles(
-        Sets.newHashSet("AMC")
-    )
-        .stream()
-        .forEach(p -> System.out.println(p));
   }
 
 }
