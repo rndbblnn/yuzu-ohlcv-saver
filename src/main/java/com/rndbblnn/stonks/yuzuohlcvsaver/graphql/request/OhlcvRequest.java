@@ -31,7 +31,7 @@ public class OhlcvRequest implements GraphQLRequest {
       "query {\n"
           + "  securities(input: { ${symbol} }) {\n"
           + "    symbol\n"
-          + "    aggregates(input: { limit: ${limit},  offset:${offset}, period: ${period} ${after} ${before}}) {\n"
+          + "    aggregates(input: { limit: ${limit}, period: ${period} ${after} ${before}}) {\n"
           + "      time\n"
           + "      open\n"
           + "      high\n"
@@ -53,7 +53,6 @@ public class OhlcvRequest implements GraphQLRequest {
                   + "]"
                   : "");
               put("limit", String.valueOf(limit));
-              put("offset", String.valueOf(offset));
               put("period", period.name());
               put("before", (before != null) ? ", before: \"" + toDateStr(before) + "\"" : "");
               put("after", (after != null) ? ", after: \"" + toDateStr(after) + "\"" : "");
