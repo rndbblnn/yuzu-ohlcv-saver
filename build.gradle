@@ -11,6 +11,7 @@ project.version = '1.0.0'
 allprojects {
 	repositories {
 		mavenCentral()
+		mavenLocal()
 		maven { url 'https://jitpack.io' }
 	}
 	apply plugin: 'groovy'
@@ -28,7 +29,7 @@ dependencies {
 	annotationProcessor "org.springframework.boot:spring-boot-autoconfigure-processor:$springBootVersion"
 	annotationProcessor "org.springframework.boot:spring-boot-configuration-processor:$springBootVersion"
 
-	implementation 'com.github.rndbblnn:stonks-commons-starter:main-SNAPSHOT'
+	implementation 'com.rndbblnn:stonks-commons-starter:0.0.1'
 
 	// spring stuff
 	implementation "org.springframework.boot:spring-boot-starter-jdbc:$springBootVersion"
@@ -67,7 +68,6 @@ dependencies {
 	testAnnotationProcessor "org.projectlombok:lombok:$lombokVersion"
 
 	testImplementation "org.springframework.boot:spring-boot-starter-test:$springBootVersion"
-//	testImplementation 'io.projectreactor:reactor-test'
 	testImplementation 'junit:junit:4.13.2'
 	testImplementation("org.junit.jupiter:junit-jupiter-api:5.4.2")
 	testImplementation 'org.mockito:mockito-core:4.2.0'
@@ -90,33 +90,19 @@ test {
 }
 
 java {
-
 }
 
 publishing {
 	publications {
-		sonatype(MavenPublication) {
+		mavenJava(MavenPublication) {
+			groupId = 'com.rndbblnn'
+			artifactId = 'yuzu-ohlcv-saver'
+			version = "0.0.1"
 			from components.java
-
-			pom {
-				name = 'Yuzu OHLCV saver'
-				description = 'Yuzu OHLCV saver'
-				url = 'https://github.com/rndbblnn/yuzu-ohlcv-saver'
-				inceptionYear = '2022'
-				licenses {
-					license {
-						name = "The Apache License, Version 2.0"
-						url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
-					}
-				}
-				developers {
-					developer {
-						id = "rndbblnn"
-						name = "Arnaud Boulianne"
-					}
-				}
-			}
 		}
+	}
+	repositories {
+		mavenLocal()
 	}
 }
 
