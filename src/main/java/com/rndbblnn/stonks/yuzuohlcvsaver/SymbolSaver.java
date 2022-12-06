@@ -2,6 +2,8 @@ package com.rndbblnn.stonks.yuzuohlcvsaver;
 
 import com.google.common.collect.Lists;
 import com.google.common.io.Files;
+import com.rndbblnn.stonks.commons.dto.CandleDto;
+import com.rndbblnn.stonks.commons.dto.SecurityTypeEnum;
 import com.rndbblnn.stonks.commons.entity.Candle1mEntity;
 import com.rndbblnn.stonks.commons.entity.CandleDailyEntity;
 import com.rndbblnn.stonks.commons.utils.DateUtils;
@@ -9,16 +11,18 @@ import com.rndbblnn.stonks.yuzuohlcvsaver.dao.Candle1mRepository;
 import com.rndbblnn.stonks.yuzuohlcvsaver.dao.CandleDailyRepository;
 import com.rndbblnn.stonks.yuzuohlcvsaver.graphql.request.OhlcvRequest;
 import com.rndbblnn.stonks.yuzuohlcvsaver.graphql.request.OhlcvRequest.Period;
+import com.rndbblnn.stonks.yuzuohlcvsaver.graphql.response.Aggregate;
 import com.rndbblnn.stonks.yuzuohlcvsaver.graphql.response.Data;
 import com.rndbblnn.stonks.yuzuohlcvsaver.graphql.response.Security;
-import com.rndbblnn.stonks.yuzuohlcvsaver.todelete.SecurityTypeEnum;
 import java.io.File;
 import java.nio.charset.Charset;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -43,6 +47,7 @@ public class SymbolSaver {
 
   private final SymbolSaverAsync symbolSaverAsync;
 
+  private final SymbolService symbolService;
   private final CandleDailyRepository candleDailyRepository;
   private final YuzuClient yuzuClient;
   private final Candle1mRepository candle1mRepository;
@@ -260,7 +265,7 @@ public class SymbolSaver {
               CompletableFuture.supplyAsync(() ->
                       this.saveIntradayCandles(
                           candleDailyEntity.getSymbol(),
-                          candleDailyEntity.getTickTime().atZone(ZoneOffset.UTC)
+                          candleDailyEntity.getTickTime().toLocalDate()
                       ),
                   taskExecutor
               );
@@ -270,78 +275,38 @@ public class SymbolSaver {
 
   @SneakyThrows
   @Transactional
-  public Data saveIntradayCandles(String symbol, ZonedDateTime zonedDateTime) {
+  public List<Candle1mEntity> saveIntradayCandles(String symbol, LocalDate localDate) {
+    return this.saveIntradayCandles(symbol, localDate, localDate.plusDays(1));
+  }
 
-    ZonedDateTime from = DateUtils.trimHoursAndMinutes(
-        zonedDateTime.withZoneSameInstant(ZoneId.of("UTC"))
-            .withZoneSameInstant(ZoneId.of("UTC")));
-    ZonedDateTime to = DateUtils.trimHoursAndMinutes(
-            zonedDateTime.withZoneSameInstant(ZoneId.of("UTC")).plusDays(1))
-        .withZoneSameInstant(ZoneId.of("UTC"));
+  @SneakyThrows
+  @Transactional
+  private List<Candle1mEntity> saveIntradayCandles(String symbol, LocalDate from, LocalDate to) {
 
-    if (candle1mRepository.existsTickEntityByTickTimeAndSymbol(
-        from.withHour(14).withMinute(30).withZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime(), symbol)
-        &&
-        candle1mRepository.existsTickEntityByTickTimeAndSymbol(
-            from.withHour(20).withMinute(59).withZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime(), symbol)) {
-      log.warn("Skipping {} @ {}", symbol, from);
-      return null;
-    }
+    return symbolService.getIntradayCandles(symbol, from, to)
+        .stream()
+        .filter(dto -> !candle1mRepository.existsTickEntityByTickTimeAndSymbol(
+            dto.getTickTime(),
+            dto.getSymbol())
+        )
+        .map(dto -> {
 
-    log.info("querying... [symbol:{}, from:{}, to:{}]", symbol, zonedDateTime, zonedDateTime);
+          Candle1mEntity entity = (Candle1mEntity) new Candle1mEntity()
+              .setSymbol(dto.getSymbol())
+              .setOpen(dto.getOpen())
+              .setHigh(dto.getHigh())
+              .setLow(dto.getLow())
+              .setClose(dto.getClose())
+              .setVolume(dto.getVolume().longValue())
+              .setTickTime(dto.getTickTime())
+              .setCreated(LocalDateTime.now());
 
-    Data data = yuzuClient.query(
-        new OhlcvRequest()
-            .setSymbols(Lists.newArrayList(symbol))
-            .setPeriod(Period.MINUTE)
-            .setAfter(from)
-            .setBefore(to),
-        Data.class
-    );
+          candle1mRepository.save(entity);
+          return entity;
+        })
+        .collect(Collectors.toList());
 
-    if (data == null) {
-      log.error("data == null {} @ {}", symbol, from);
-      return null;
-    }
-    Security security = data.getSecurities().get(0);
-    if (data.getSecurities().size() > 1) {
-      throw new RuntimeException("size > 1");
-    }
-    if (data.getSecurities().get(0).getAggregates().size() == 0) {
-      log.info("\t{} aggregates is empty", symbol);
-      return null;
-    }
+//    candleResampler.resampleFrom1Minute(entityList);
 
-    List<Candle1mEntity> entityList =
-        security.getAggregates()
-            .stream()
-
-            .filter(agg -> agg.getTime().isAfter(from.withHour(14).withMinute(29))
-                && agg.getTime().isBefore(from.withHour(21).withMinute(01)))
-            .filter(agg -> !candle1mRepository.existsTickEntityByTickTimeAndSymbol(
-                agg.getTime().withZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime(), symbol))
-            .map(agg -> {
-              LocalDateTime tickTime = agg.getTime().withZoneSameInstant(ZoneId.of("America/New_York")).toLocalDateTime();
-              log.info("saving ... [symbol:{}, tickTime:{}]", symbol, tickTime);
-
-              Candle1mEntity candle1mEntity = (Candle1mEntity) new Candle1mEntity()
-                  .setSymbol(security.getSymbol())
-                  .setOpen(agg.getOpen())
-                  .setHigh(agg.getHigh())
-                  .setLow(agg.getLow())
-                  .setClose(agg.getClose())
-                  .setVolume(agg.getVolume().longValue())
-                  .setTickTime(tickTime)
-                  .setCreated(LocalDateTime.now());
-
-              candle1mRepository.save(candle1mEntity);
-
-              return candle1mEntity;
-            })
-            .collect(Collectors.toList());
-
-    candleResampler.resampleFrom1Minute(entityList);
-
-    return data;
   }
 }

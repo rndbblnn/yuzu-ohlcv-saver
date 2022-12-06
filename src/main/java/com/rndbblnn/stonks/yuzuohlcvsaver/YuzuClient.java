@@ -63,6 +63,7 @@ public class YuzuClient {
         return response;
       } else {
         System.err.println("null response #" + i);
+        System.err.println(q);
         nullResponse = true;
       }
     }

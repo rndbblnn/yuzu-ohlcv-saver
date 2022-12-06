@@ -1,8 +1,7 @@
 package com.rndbblnn.stonks.yuzuohlcvsaver;
 
-import com.google.common.collect.Sets;
-import com.rndbblnn.stonks.commons.dao.CandleUtilsRepository;
-import com.rndbblnn.stonks.yuzuohlcvsaver.todelete.SecurityTypeEnum;
+import com.rndbblnn.stonks.commons.dto.SecurityTypeEnum;
+import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import lombok.SneakyThrows;
@@ -48,7 +47,7 @@ public class SymbolSaverTest extends BaseIntegrationTest {
 
   @Test
   public void testsaveIntradayCandles() {
-    symbolSaver.saveIntradayCandles("AMPX", ZonedDateTime.of(2022,11,11,0,0,0,0, ZoneId.systemDefault()));
+    symbolSaver.saveIntradayCandles("AMC", LocalDate.now());
   }
 
 }
