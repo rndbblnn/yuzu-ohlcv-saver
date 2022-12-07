@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
@@ -27,7 +28,7 @@ public class SymbolService {
 
   private final YuzuClient yuzuClient;
 
-  public List<CandleDto> getIntradayCandles(String symbol, LocalDate from, LocalDate to) {
+  public List<CandleDto> getIntradayCandles(final String symbol, LocalDate from, LocalDate to) {
 
     List<Aggregate> aggregates = new ArrayList<>();
 
@@ -62,6 +63,7 @@ public class SymbolService {
         .filter(agg -> agg.getTime().isAfter(agg.getTime().withHour(14).withMinute(29))
             && agg.getTime().isBefore(agg.getTime().withHour(21).withMinute(01)))
         .map(agg -> new CandleDto()
+            .setSymbol(symbol)
             .setTickTime(agg.getTime().withZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime())
             .setOpen(agg.getOpen())
             .setHigh(agg.getHigh())
@@ -74,7 +76,7 @@ public class SymbolService {
 
   @SneakyThrows
   @Transactional
-  private List<Aggregate> getIntradayCandlesForDay(String symbol, ZonedDateTime from, ZonedDateTime to) {
+  private List<Aggregate> getIntradayCandlesForDay(final String symbol, ZonedDateTime from, ZonedDateTime to) {
     log.info("querying... [symbol:{}, period: {}, from:{}, to:{}]", symbol, Period.MINUTE, from, to);
 
     Data data = yuzuClient.query(
@@ -88,14 +90,14 @@ public class SymbolService {
 
     if (data == null) {
       log.error("data == null {} @ {}", symbol, from);
-      return null;
+      return Collections.emptyList();
     }
     if (data.getSecurities().size() > 1) {
       throw new RuntimeException("size > 1");
     }
     if (data.getSecurities().get(0).getAggregates().size() == 0) {
       log.info("\t{} aggregates is empty", symbol);
-      return null;
+      return Collections.emptyList();
     }
 
     return data.getSecurities().iterator().next().getAggregates();
@@ -115,17 +117,18 @@ public class SymbolService {
 
     if (data == null) {
       log.error("data == null {} @ {}", symbol, from);
-      return null;
+      return Collections.emptyList();
     }
     if (data.getSecurities().size() > 1) {
       throw new RuntimeException("size > 1");
     }
     if (data.getSecurities().get(0).getAggregates().size() == 0) {
       log.info("\t{} aggregates is empty", symbol);
-      return null;
+      return Collections.emptyList();
     }
     return data.getSecurities().iterator().next().getAggregates().stream()
         .map(agg -> new CandleDto()
+            .setSymbol(symbol)
             .setTickTime(agg.getTime().toLocalDateTime())
             .setOpen(agg.getOpen())
             .setHigh(agg.getHigh())
